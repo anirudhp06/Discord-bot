@@ -1,1 +1,1 @@
-web:python rewrite.py
+web:python main.py
