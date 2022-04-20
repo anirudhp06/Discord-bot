@@ -11,7 +11,7 @@ with open('token.txt','r') as tok:
 class MyClient(discord.Client):
     async def on_ready(self):
         print('Logged in successfully!!! Changing presence')
-        activity=discord.Activity(type=discord.ActivityType.watching, name="beauty of being subtle")
+        activity=discord.Activity(type=discord.ActivityType.watching, name="art of being subtle")
         await self.change_presence(status=discord.Status.idle, activity=activity)
         print('Presence Changed!')
         global startTime
