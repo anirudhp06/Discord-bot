@@ -5,6 +5,8 @@ pickup=["shut up or else i'll shut u up with my lips","Will you be my valentine?
         "I never believed in love at first sight, but that was before I saw you.","You’re like a fine wine. The more of you I drink in, the better I feel.","Do you have a map? I just got lost in your eyes."]
 import random
 import os
+from dotenv import load_dotenv,find_dotenv
+load_dotenv(find_dotenv())
 book={'ping':'pong','pong':'ping','andrew':'andrew senpai'}
 with open('token.txt','r') as tok:
     TOKEN=tok.readline()
@@ -38,4 +40,4 @@ class MyClient(discord.Client):
             await message.channel.send(content=f"Pong!:`{int(ping)}ms`")
             print(f'Ping {int(ping)}ms')
 client = MyClient()
-client.run(TOKEN)
+client.run(os.getenv('TOKEN'))
