@@ -65,6 +65,6 @@ class MyClient(discord.Client):
             await message.channel.send("Pong!")
             ping = (time.monotonic() - before) * 1000
             await message.channel.edit(content=f"Pong!  `{int(ping)}ms`")
-            print(f'Ping {int(ping)}ms')
+            print(f'Ping! {int(ping)}ms')
 client = MyClient()
 client.run(os.getenv('TOKEN'))
