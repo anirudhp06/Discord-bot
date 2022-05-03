@@ -8,8 +8,6 @@ import os
 from dotenv import load_dotenv,find_dotenv
 load_dotenv(find_dotenv())
 book={'ping':'pong','pong':'ping','andrew':'andrew senpai'}
-with open('token.txt','r') as tok:
-    TOKEN=tok.readline()
 class MyClient(discord.Client):
     async def on_ready(self):
         print('Logged in successfully!!! Changing presence')
