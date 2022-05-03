@@ -11,7 +11,6 @@ pickup=["shut up or else i'll shut u up with my lips","Will you be my valentine?
 import random
 import os
 from sys import exit
-import keyboard
 book={'ping':'pong','pong':'ping','andrew':'andrew senpai'}
 act=os.path.isfile('rest.txt')
 def restart():
