@@ -4,8 +4,7 @@ from discord.ext import commands
 import datetime, time
 from dotenv import load_dotenv,find_dotenv
 load_dotenv(find_dotenv())
-"""with open('token.txt','r') as tok:
-    TOKEN=tok.readline()"""
+import datetime, time
 pickup=["shut up or else i'll shut u up with my lips","Will you be my valentine?🥺","So lone that u tagged me? Lets go on date!","I ought to complain to Spotify for you not being named this week’s hottest single.",
         "I never believed in love at first sight, but that was before I saw you.","You’re like a fine wine. The more of you I drink in, the better I feel.","Do you have a map? I just got lost in your eyes."]
 import random

@@ -1,41 +1,118 @@
+import json
 import discord
-from discord.ext import commands
-import datetime, time
-pickup=["shut up or else i'll shut u up with my lips","Will you be my valentine?🥺","So lone that u tagged me? Lets go on date!","I ought to complain to Spotify for you not being named this week’s hottest single.",
-        "I never believed in love at first sight, but that was before I saw you.","You’re like a fine wine. The more of you I drink in, the better I feel.","Do you have a map? I just got lost in your eyes."]
-import random
+import requests
+import re
 import os
-book={'ping':'pong','pong':'ping','andrew':'andrew senpai'}
-with open('token.txt','r') as tok:
-    TOKEN=tok.readline()
-class MyClient(discord.Client):
-    async def on_ready(self):
-        print('Logged in successfully!!! Changing presence')
-        activity=discord.Activity(type=discord.ActivityType.watching, name="art of being subtle")
-        await self.change_presence(status=discord.Status.idle, activity=activity)
-        print('Presence Changed!')
-        global startTime
-        startTime = time.time()
-    async def on_message(self, message):
-        # don't respond to ourselves
-        if message.author == self.user:
-            return
-        if message.content.lower() in book:
-            await message.channel.send(book[message.content.lower()])
-            print('{0.author},said: {0.content}'.format(message))
-        if client.user.mentioned_in(message):
-            num=random.randint(0, len(pickup)-1)
-            await message.channel.send(pickup[num])
-        if str(message.channel) == "youtube-notif" and message.content.lower() == "done":
-            await message.channel.purge(limit=2)
-        if message.content.lower()=='uptime':
-            uptime = str(datetime.timedelta(seconds=int(round(time.time()-startTime))))
-            await message.channel.send(uptime)
-        if message.content.lower()=='latency':
-            before = time.monotonic()
-            await message.channel.send("Pinging servers...")
-            ping = (time.monotonic() - before) * 1000
-            await message.channel.send(content=f"Pong!:`{int(ping)}ms`")
-            print(f'Ping {int(ping)}ms')
-client = MyClient()
-client.run(TOKEN)
+import random
+import datetime, time
+from dotenv import find_dotenv,load_dotenv
+from discord.ext import commands, tasks
+load_dotenv(find_dotenv())
+bot = commands.Bot(command_prefix = "!")
+uptime=''
+@bot.event
+async def on_ready():
+    print("Bot Now Online!")
+    activity=discord.Activity(type=discord.ActivityType.watching, name="art of being subtle")
+    await bot.change_presence(status=discord.Status.idle, activity=activity)
+    #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="beauty of being subtle"))
+    print('Presence Changed!')
+    global startTime
+    startTime = time.time()
+    #starting checking for vidoes everytime the bot's go online
+    checkforvideos.start()
+
+#checking for vidoes every 30 seconds
+#you can check for vidoes every 10 seconds also but i would prefer to keep 30 seconds
+@tasks.loop(seconds=30)
+async def checkforvideos():
+  with open("youtubedata.json", "r") as f:
+    data=json.load(f)
+  
+  #printing here to show
+  print("Now Checking!")
+
+  #checking for all the channels in youtubedata.json file
+  for youtube_channel in data:
+    print(f"Now Checking For {data[youtube_channel]['channel_name']}")
+    #getting youtube channel's url
+    channel = f"https://www.youtube.com/channel/{youtube_channel}"
+
+    #getting html of the /videos page
+    html = requests.get(channel+"/videos").text
+
+    #getting the latest video's url
+    #put this line in try and except block cause it can give error some time if no video is uploaded on the channel
+    try:
+      latest_video_url = "https://www.youtube.com/watch?v=" + re.search('(?<="videoId":").*?(?=")', html).group()
+    except:
+      continue
+
+    #checking if url in youtubedata.json file is not equals to latest_video_url
+    if not str(data[youtube_channel]["latest_video_url"]) == latest_video_url:
+
+      #changing the latest_video_url
+      data[str(youtube_channel)]['latest_video_url'] = latest_video_url
+
+      #dumping the data
+      with open("youtubedata.json", "w") as f:
+        json.dump(data, f)
+
+      #getting the channel to send the message
+      discord_channel_id = data[str(youtube_channel)]['notifying_discord_channel']
+      discord_channel = bot.get_channel(int(discord_channel_id))
+
+      #sending the msg in discord channel
+      #you can mention any role like this if you want
+      msg = f"<@&951907130955432058> {data[str(youtube_channel)]['channel_name']} Just Uploaded A Video Or He is Live Go Check It Out: {latest_video_url}"
+      #if you'll send the url discord will automaitacly create embed for it
+      #if you don't want to send embed for it then do <{latest_video_url}>
+
+      await discord_channel.send(msg)
+      
+#creating command to add more youtube accounds data in youtubedata.json file
+#you can also use has_role if you don't want to allow everyone to use this command
+@bot.command()
+@commands.has_role("VIP")
+async def add_youtube_notification_data(ctx, channel_id: str, *, channel_name: str):
+  with open("youtubedata.json", "r") as f:
+    data = json.load(f)
+  
+  data[str(channel_id)]={}
+  data[str(channel_id)]["channel_name"]=channel_name
+  data[str(channel_id)]["latest_video_url"]="none"
+
+  #you can also get discord_channe id from the command 
+  #but if the channel is same then you can also do directly
+  data[str(channel_id)]["notifying_discord_channel"]="890293434856914964"
+
+  with open("youtubedata.json", "w") as f:
+    json.dump(data, f)
+
+  await ctx.send("Added Your Account Data!")
+
+#you can also create this command if you ever want to stop notifying
+@bot.command()
+@commands.has_role("VIP")
+async def stop_notifying(ctx):
+  checkforvideos.stop()
+  await ctx.send("Stoped Notifying")
+
+#you can also create this command to start notifying but we're gonna do so that everytime the bot goes online it will automaitacly starts notifying
+@bot.command()
+@commands.has_role("VIP")
+async def start_notifying(ctx):
+  checkforvideos.start()
+  await ctx.send("Now Notifying")
+@bot.command()
+async def latency(ctx):
+  before = time.monotonic()
+  await ctx.send("Ping!")
+  ping = (time.monotonic() - before) * 1000
+  await ctx.send(content=f"Pong!  `{int(ping)}ms`")
+  print(f'Ping! {int(ping)}ms')
+@bot.command()
+async def uptime(ctx):
+  uptime = str(datetime.timedelta(seconds=int(round(time.time()-startTime))))
+  await ctx.send(uptime)   
+bot.run(os.getenv('TOKEN'))
