@@ -44,9 +44,6 @@ async def checkResult():
         print("Calling status object and setting status")
         st.setStat(html.status_code)
         print("Status object set")
-def setStatus(code):
-    current=code
-    return current
 @bot.command()
 async def status(ctx):
     await ctx.send("Current status code for {} is {}".format(links,st.getStat()))
