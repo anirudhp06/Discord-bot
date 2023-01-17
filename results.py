@@ -1,11 +1,12 @@
 import discord
 import requests
 import os
+import datetime
 from dotenv import find_dotenv,load_dotenv
 from discord.ext import commands, tasks
 load_dotenv(find_dotenv())
+from bs4 import BeautifulSoup as bs
 bot = commands.Bot(command_prefix = "!")
-links='https://result.jabincollege.com/'
 class GetStat:
     code=0
     def getStat(self):
@@ -17,35 +18,31 @@ st=GetStat()
 @bot.event
 async def on_ready():
     print("Bot Now Online!")
-    activity=discord.Activity(type=discord.ActivityType.watching, name="Watching results 😈")
+    activity=discord.Activity(type=discord.ActivityType.watching, name="results 😈")
     await bot.change_presence(status=discord.Status.idle, activity=activity)
     #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="beauty of being subtle"))
-    print('Presence Changed!')
+    print('Presence Changed to "results 😈"!')
     checkResult.start()
-@tasks.loop(seconds=300)
+@tasks.loop(seconds=5)
 async def checkResult():
-    try:
-        html=requests.get(links)
-        print(html.status_code)
-    except:
-        print("Secure connection cannot be established")
-        html=requests.get("http://result.jabincollege.com/")
-    if(html.status_code==200):
-        print("Jabin college code:{}\nWebsite:{}".format(html.status_code,links))
-        discord_channel_id=965606396567634010
-        discord_channel=bot.get_channel(discord_channel_id)
-        msg="<@&951907130955432058> Results are out go check here {}. Please check it out.".format(links)
-        await discord_channel.send(msg)
-        print("Calling status object and setting status")
-        st.setStat(html.status_code)
-        print("Status object set")
-    else:
-        print("Website not up yet")
-        print("Calling status object and setting status")
-        st.setStat(html.status_code)
-        print("Status object set")
+        x = datetime.datetime.now()
+        res=requests.get("https://cetonline.karnataka.gov.in/kea/Pgcet22",verify=False)
+        soup=bs(res.text,features="html.parser")
+        doc=soup.find(id="ContentPlaceHolder1_req_accordion")
+        if(len(doc)>20):
+            code=1
+            print("Result is out")
+            discord_channel_id=965606396567634010
+            discord_channel=bot.get_channel(discord_channel_id)
+            msg="<@&951907130955432058> Results are out go check here {}. Please check it out.".format("https://cetonline.karnataka.gov.in/kea/Pgcet22")
+            await discord_channel.send(msg)
+        else:
+            code=0
+            print(x.strftime("%I:%M:%S %p"), end=" ")
+            print("Waiting for update from https://cetonline.karnataka.gov.in/kea/Pgcet22")
 @bot.command()
 async def status(ctx):
-    await ctx.send("Current status code for {} is {}".format(links,st.getStat()))
+    if(st.getStat()==0):
+        await ctx.send("Results are not out")
     print("!status command called")
 bot.run(os.getenv("TOKEN"))
